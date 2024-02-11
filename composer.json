@@ -1,0 +1,35 @@
+{
+    "name": "bostjanob/filament-file-manager",
+    "description": "Filament File Manager",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "filament",
+        "file-manager"
+    ],
+    "homepage": "https://github.com/BostjanOb/filament-file-manager",
+    "autoload": {
+        "psr-4": {
+            "BostjanOb\\FilamentFileManager\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Bostjan",
+            "email": "bostjan@muha.cc"
+        }
+    ],
+    "minimum-stability": "dev",
+    "extra": {
+        "laravel": {
+            "providers": [
+                "BostjanOb\\FilamentFileManager\\FilamentFileManagerServiceProvider"
+            ]
+        }
+    },
+    "require": {
+        "calebporzio/sushi": "^v2.5",
+        "filament/support": "^3.0",
+        "spatie/laravel-package-tools": "^1.16"
+    }
+}
