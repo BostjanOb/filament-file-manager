@@ -2,7 +2,7 @@
 
 namespace BostjanOb\FilamentFileManager\Components;
 
-use BostjanOb\FilamentFileManager\Model\Storage;
+use BostjanOb\FilamentFileManager\Model\FileItem;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -15,9 +15,8 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Storage as StorageDisk;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Number;
-use League\Flysystem\Visibility;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
@@ -26,10 +25,10 @@ class FileList extends Component implements HasForms, HasTable
     use InteractsWithForms;
     use InteractsWithTable;
 
-    public string $disk = 'public';
+    public string $disk;
 
     #[Url(except: '')]
-    public string $path = '';
+    public string $path;
 
     protected $listeners = ['updatePath' => '$refresh'];
 
@@ -43,7 +42,7 @@ class FileList extends Component implements HasForms, HasTable
         return $table
             ->heading($this->path ?: 'Root')
             ->query(
-                Storage::queryForDiskAndPath($this->disk, $this->path)
+                FileItem::queryForDiskAndPath($this->disk, $this->path)
             )
             ->paginated(false)
             ->columns([
@@ -61,11 +60,7 @@ class FileList extends Component implements HasForms, HasTable
                             $this->path = $record->path;
 
                             $this->dispatch('updatePath');
-
-                            return true;
                         }
-
-                        return null;
                     }),
                 TextColumn::make('dateModified')
                     ->dateTime(),
@@ -76,23 +71,18 @@ class FileList extends Component implements HasForms, HasTable
             ->actions([
                 ViewAction::make()
                     ->label('View')
-                    ->hidden(
-                        fn ($record) => $record->type === 'Folder'
-                            || ! StorageDisk::disk($this->disk)->exists($record->path)
-                            || StorageDisk::disk($this->disk)->getVisibility($record->path) === Visibility::PRIVATE
-                    )
-                    ->url(fn ($record) => StorageDisk::disk($this->disk)->url($record->path))
+                    ->hidden(fn (FileItem $record): bool => ! $record->canOpen())
+                    ->url(fn (FileItem $record): string => Storage::disk($this->disk)->url($record->path))
                     ->openUrlInNewTab(),
-
                 DeleteAction::make()
                     ->successNotificationTitle('File deleted')
-                    ->hidden(fn ($record) => $record->name === '..')
+                    ->hidden(fn (FileItem $record): bool => $record->name === '..')
                     ->action(
-                        function ($record, Component $livewire) {
+                        function (FileItem $record, Component $livewire) {
                             if ($record->type === 'Folder') {
-                                $status = StorageDisk::disk($livewire->disk)->deleteDirectory($record->path);
+                                $status = Storage::disk($livewire->disk)->deleteDirectory($record->path);
                             } else {
-                                $status = StorageDisk::disk($livewire->disk)->delete($record->path);
+                                $status = Storage::disk($livewire->disk)->delete($record->path);
                             }
 
                             if ($status) {
@@ -115,7 +105,7 @@ class FileList extends Component implements HasForms, HasTable
                             ->required(),
                     ])
                     ->action(function (array $data, Component $livewire): void {
-                        StorageDisk::disk($livewire->disk)
+                        Storage::disk($livewire->disk)
                             ->makeDirectory($livewire->path.'/'.$data['name']);
 
                         Notification::make()
@@ -129,6 +119,7 @@ class FileList extends Component implements HasForms, HasTable
                 Action::make('upload_file')
                     ->label('Upload files')
                     ->icon('heroicon-o-document-arrow-up')
+                    ->color('info')
                     ->form([
                         FileUpload::make('files')
                             ->required()

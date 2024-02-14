@@ -3,7 +3,6 @@
 namespace BostjanOb\FilamentFileManager\Pages;
 
 use Filament\Pages\Page;
-use Illuminate\Contracts\Support\Htmlable;
 
 class FileManager extends Page
 {
@@ -11,13 +10,13 @@ class FileManager extends Page
 
     protected static string $view = 'filament-file-manager::pages.file-manager';
 
-    public function getHeading(): string|Htmlable
+    public function getDisk(): string
     {
-        return 'File manager';
+        return config('filesystems.default');
     }
 
-    public static function getNavigationLabel(): string
+    public function getPath(): string
     {
-        return 'File manager';
+        return '';
     }
 }

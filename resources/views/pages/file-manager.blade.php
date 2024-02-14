@@ -1,7 +1,3 @@
 <x-filament-panels::page>
-    <div class="flex flex-col gap-y-8">
-        <div>
-            @livewire(BostjanOb\FilamentFileManager\Components\FileList::class)
-        </div>
-    </div>
+    @livewire(BostjanOb\FilamentFileManager\Components\FileList::class, ['disk' => $this->getDisk(), 'path' => $this->getPath()])
 </x-filament-panels::page>
