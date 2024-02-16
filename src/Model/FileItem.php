@@ -2,6 +2,7 @@
 
 namespace BostjanOb\FilamentFileManager\Model;
 
+use Illuminate\Contracts\Filesystem\Filesystem as FilesystemContract;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
@@ -78,6 +79,6 @@ class FileItem extends Model
     {
         return $this->type !== 'Folder'
             && Storage::disk(static::$disk)->exists($this->path)
-            && Storage::disk(static::$disk)->getVisibility($this->path) !== 'private';
+            && Storage::disk(static::$disk)->getVisibility($this->path) === FilesystemContract::VISIBILITY_PUBLIC;
     }
 }

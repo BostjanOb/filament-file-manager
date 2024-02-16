@@ -9,6 +9,7 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\CreateAction;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
@@ -70,10 +71,14 @@ class FileList extends Component implements HasForms, HasTable
             ])
             ->actions([
                 ViewAction::make()
-                    ->label('View')
+                    ->label('Open')
                     ->hidden(fn (FileItem $record): bool => ! $record->canOpen())
                     ->url(fn (FileItem $record): string => Storage::disk($this->disk)->url($record->path))
                     ->openUrlInNewTab(),
+                Action::make('download')
+                    ->label('Download')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->action(fn (FileItem $record) => Storage::disk($this->disk)->download($record->path)),
                 DeleteAction::make()
                     ->successNotificationTitle('File deleted')
                     ->hidden(fn (FileItem $record): bool => $record->name === '..')
