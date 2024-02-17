@@ -12,7 +12,7 @@ composer require bostjanob/filament-fila-manager
 
 ## Usage
 
-Extend the page class and override the `getDisk` method.
+Extend the page class and set `$disk` property to the disk you want to manage.
 
 ```php
 <?php
@@ -24,15 +24,12 @@ use BostjanOb\FilamentFileManager\Pages\FileManager;
 class PublicFileManager extends FileManager
 {
     protected static ?string $navigationLabel = 'Public files';
-
-    public function getDisk(): string
-    {
-        return 'public';
-    }
+    
+    protected string $disk = 'public';
 }
 ```
 
-If you want to change default folder, override the `getPath` method.
+If you want to change default folder, override the `$path` property.
 
 ## License
 

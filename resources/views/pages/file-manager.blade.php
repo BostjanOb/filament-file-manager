@@ -1,3 +1,3 @@
 <x-filament-panels::page>
-    @livewire(BostjanOb\FilamentFileManager\Components\FileList::class, ['disk' => $this->getDisk(), 'path' => $this->getPath()])
+    {{ $this->table }}
 </x-filament-panels::page>

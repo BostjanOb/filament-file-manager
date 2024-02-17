@@ -32,6 +32,12 @@ class FileItem extends Model
         return static::query();
     }
 
+    public function isFolder(): bool
+    {
+        return $this->type === 'Folder'
+            && is_dir( Storage::disk(static::$disk)->path($this->path) );
+    }
+
     public function getRows(): array
     {
         $backPath = [];
