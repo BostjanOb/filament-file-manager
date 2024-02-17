@@ -5,15 +5,16 @@ namespace BostjanOb\FilamentFileManager\Pages;
 use BostjanOb\FilamentFileManager\Model\FileItem;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
-use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\BulkAction;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Number;
 use Livewire\Attributes\Url;
@@ -52,8 +53,8 @@ class FileManager extends Page implements HasTable
                         'Folder' => 'warning',
                         default => 'gray',
                     })
-                    ->action(function ($record, Component $livewire) {
-                        if ($record->type === 'Folder') {
+                    ->action(function (FileItem $record) {
+                        if ($record->isFolder()) {
                             $this->path = $record->path;
 
                             $this->dispatch('updatePath');
@@ -78,24 +79,27 @@ class FileManager extends Page implements HasTable
                     ->action(fn (FileItem $record) => Storage::disk($this->disk)->download($record->path)),
                 DeleteAction::make()
                     ->successNotificationTitle('File deleted')
-                    ->hidden(fn (FileItem $record): bool => $record->name === '..')
-                    ->action(
-                        function (FileItem $record, Component $livewire) {
-                            if ($record->isFolder()) {
-                                $status = Storage::disk($livewire->disk)->deleteDirectory($record->path);
-                            } else {
-                                $status = Storage::disk($livewire->disk)->delete($record->path);
-                            }
-
-                            if ($status) {
-                                Notification::make()
-                                    ->title($record->type === 'Folder' ? 'Folder deleted' : 'File deleted')
-                                    ->success()
-                                    ->send();
-                            }
+                    ->hidden(fn (FileItem $record): bool => $record->isPreviousPath())
+                    ->action(function (FileItem $record, Action $action) {
+                        if ($record->delete()) {
+                            $action->sendSuccessNotification();
                         }
-                    ),
+
+                    }),
             ])
+            ->bulkActions([
+                BulkAction::make('delete')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->successNotificationTitle('Files deleted')
+                    ->deselectRecordsAfterCompletion()
+                    ->action(function (Collection $records, BulkAction $action) {
+                        $records->each(fn (FileItem $record) => $record->delete());
+                        $action->sendSuccessNotification();
+                    }),
+            ])
+            ->checkIfRecordIsSelectableUsing(fn (FileItem $record): bool => ! $record->isPreviousPath())
             ->headerActions([
                 Action::make('create_folder')
                     ->label('Create Folder')
@@ -106,16 +110,13 @@ class FileManager extends Page implements HasTable
                             ->placeholder('Folder name')
                             ->required(),
                     ])
-                    ->action(function (array $data, Component $livewire): void {
+                    ->successNotificationTitle('Folder created')
+                    ->action(function (array $data, Component $livewire, Action $action): void {
                         Storage::disk($livewire->disk)
                             ->makeDirectory($livewire->path.'/'.$data['name']);
 
-                        Notification::make()
-                            ->title('Folder created')
-                            ->success()
-                            ->send();
-
                         $this->resetTable();
+                        $action->sendSuccessNotification();
                     }),
 
                 Action::make('upload_file')

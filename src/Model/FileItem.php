@@ -17,7 +17,7 @@ class FileItem extends Model
 
     protected static string $path;
 
-    protected $schema = [
+    protected array $schema = [
         'name' => 'string',
         'dateModified' => 'datetime',
         'size' => 'integer',
@@ -35,7 +35,28 @@ class FileItem extends Model
     public function isFolder(): bool
     {
         return $this->type === 'Folder'
-            && is_dir( Storage::disk(static::$disk)->path($this->path) );
+            && is_dir(Storage::disk(static::$disk)->path($this->path));
+    }
+
+    public function isPreviousPath(): bool
+    {
+        return $this->name === '..';
+    }
+
+    public function delete(): bool
+    {
+        if ($this->isFolder()) {
+            return Storage::disk(static::$disk)->deleteDirectory($this->path);
+        }
+
+        return Storage::disk(static::$disk)->delete($this->path);
+    }
+
+    public function canOpen(): bool
+    {
+        return $this->type !== 'Folder'
+            && Storage::disk(static::$disk)->exists($this->path)
+            && Storage::disk(static::$disk)->getVisibility($this->path) === FilesystemContract::VISIBILITY_PUBLIC;
     }
 
     public function getRows(): array
@@ -79,12 +100,5 @@ class FileItem extends Model
                 ]
                 )
         )->toArray();
-    }
-
-    public function canOpen(): bool
-    {
-        return $this->type !== 'Folder'
-            && Storage::disk(static::$disk)->exists($this->path)
-            && Storage::disk(static::$disk)->getVisibility($this->path) === FilesystemContract::VISIBILITY_PUBLIC;
     }
 }
