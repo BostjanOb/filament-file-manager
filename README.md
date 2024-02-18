@@ -7,7 +7,7 @@ This package provides a Filament page as a simple file manager.
 You can install the package via composer:
 
 ```bash
-composer require bostjanob/filament-fila-manager
+composer require bostjanob/filament-file-manager
 ```
 
 ## Usage
