@@ -67,7 +67,7 @@ class FileManager extends Page implements HasTable
                 TextColumn::make('type'),
             ])
             ->actions([
-                ViewAction::make()
+                ViewAction::make('open')
                     ->label('Open')
                     ->hidden(fn (FileItem $record): bool => ! $record->canOpen())
                     ->url(fn (FileItem $record): string => Storage::disk($this->disk)->url($record->path))
@@ -77,7 +77,7 @@ class FileManager extends Page implements HasTable
                     ->icon('heroicon-o-document-arrow-down')
                     ->hidden(fn (FileItem $record): bool => $record->isFolder())
                     ->action(fn (FileItem $record) => Storage::disk($this->disk)->download($record->path)),
-                DeleteAction::make()
+                DeleteAction::make('delete')
                     ->successNotificationTitle('File deleted')
                     ->hidden(fn (FileItem $record): bool => $record->isPreviousPath())
                     ->action(function (FileItem $record, Action $action) {

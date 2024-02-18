@@ -31,6 +31,38 @@ class PublicFileManager extends FileManager
 
 If you want to change default folder, override the `$path` property.
 
+### Customizing actions
+
+You can customize the actions by overriding the `table` method.
+
+Hiding button:
+```php
+public function table(Table $table): Table
+{
+    $table = parent::table($table);
+
+    // actions names: open, download, delete
+    $table->getAction('delete')->hidden(true);
+
+    return $table;
+}
+```
+
+Adding addition action:
+```php
+public function table(Table $table): Table
+{
+    $table = parent::table($table);
+
+    $table->pushActions([
+        Action::make('john')
+            ->label('John'),
+    ]);
+
+    return $table;
+}
+```
+
 ## License
 
 The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
